@@ -76,7 +76,7 @@ class boss_hadronox : public CreatureScript
             {
                 summons.DoAction(ACTION_DESPAWN_ADDS);
                 BossAI::Reset();                
-                me->SummonCreature(NPC_ANUB_AR_CRUSHER, 542.9f, 519.5f, 741.24f, 2.14f);
+               me->SummonCreature(NPC_ANUB_AR_CRUSHER, 516.6f, 550.8f, 732.24f, 2.14f);
             }
 
             void DoAction(int32 param)
