@@ -279,14 +279,14 @@ public:
         uint8 currentPos;
         uint8 AchievementHitCount;
 
-        void Reset()
-        {
-            events.Reset();
-            summons.DespawnAll();
-            currentPos = 0;
-            AchievementHitCount = 0;
-            me->RemoveAllAuras();
-        }
+    //    void Reset()
+     //   {
+     //       events.Reset();
+      //      summons.DespawnAll();
+      //      currentPos = 0;
+      //      AchievementHitCount = 0;
+      //      me->RemoveAllAuras();
+     //   }
 
         void DoAction(int32 param)
         {
