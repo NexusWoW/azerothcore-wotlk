@@ -84,13 +84,13 @@ public:
 
         void JustSummoned(Creature* cr) { summons.Summon(cr); }
 
-       // void Reset()
-      //  {
-        //    summons.DespawnAll();
-       //     events.Reset();
-        //    SpawnHelpers();
-        //    if (pInstance)
-        //        pInstance->SetData(EVENT_RAZUVIOUS, NOT_STARTED);
+        void Reset()
+       {
+            summons.DespawnAll();
+          events.Reset();
+           SpawnHelpers();
+            if (pInstance)
+               pInstance->SetData(EVENT_RAZUVIOUS, NOT_STARTED);
         }
 
         void KilledUnit(Unit* who)
