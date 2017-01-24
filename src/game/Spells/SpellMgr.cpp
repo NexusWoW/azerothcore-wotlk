@@ -4453,6 +4453,14 @@ void SpellMgr::LoadDbcDataCorrections()
             spellInfo->AuraInterruptFlags |= AURA_INTERRUPT_FLAG_CHANGE_MAP;
             break;
 
+		// Zul'Aman -- Amani Charms
+		case 43816:
+		case 43818:
+		case 43820:
+		case 43822:
+			spellInfo->AuraInterruptFlags |= AURA_INTERRUPT_FLAG_CHANGE_MAP;
+			break;
+
 
 
         //////////////////////////////////////////
