@@ -123,7 +123,7 @@ public:
             AddWaypoint(11, 1311.3f, -26.9f, 40.03f, 0);
             AddWaypoint(12, 1281.2f, -26.8f, 33.5f, 0);
             AddWaypoint(13, 1262, -26.9f, 33.5f, 0);
-			AddWaypoint(14, 1331, -26.9f, 40.18f, 0);
+	    AddWaypoint(14, 1331, -26.9f, 40.18f, 0);
             
             Start(true, false, 0, NULL, false, true);
         }
