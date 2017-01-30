@@ -533,7 +533,13 @@ class npc_minigob_manabonk : public CreatureScript
                 return Trinity::Containers::SelectRandomContainerElement(PlayerInDalaranList);
             }
 
-        
+            void SendMailToPlayer(Player* player)
+            {
+                SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                int16 deliverDelay = irand(MAIL_DELIVER_DELAY_MIN, MAIL_DELIVER_DELAY_MAX);
+                MailDraft(MAIL_MINIGOB_ENTRY, true).SendMailTo(trans, MailReceiver(player), MailSender(MAIL_CREATURE, me->GetEntry()), MAIL_CHECK_MASK_NONE, deliverDelay);
+                CharacterDatabase.CommitTransaction(trans);
+            }
 
             void UpdateAI(uint32 diff)
             {
@@ -550,7 +556,7 @@ class npc_minigob_manabonk : public CreatureScript
                             {
                                 me->NearTeleportTo(player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), 0.0f);
                                 DoCast(player, SPELL_MANABONKED);
-                                SendMailToPlayer(player);
+                                //SendMailToPlayer(player);
                             }
                             events.ScheduleEvent(EVENT_BLINK, 3*IN_MILLISECONDS);
                             break;
