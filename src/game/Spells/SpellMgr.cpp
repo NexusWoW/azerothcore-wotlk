@@ -4526,6 +4526,22 @@ void SpellMgr::LoadDbcDataCorrections()
             spellInfo->Effect[1] = 0;
             spellInfo->Effect[2] = 0;
             break;
+		// Shadow Sickle
+		// http://www.wowhead.com/spell=56702
+		// http://www.wowhead.com/spell=59103
+		case 56702:
+			spellInfo->EffectTriggerSpell[0] = 56701;
+			break;
+		case 59103:
+			spellInfo->EffectTriggerSpell[0] = 59104;
+			break;
+		case 56701:
+		case 59104:
+			spellInfo->InterruptFlags = 0;
+			spellInfo->EffectImplicitTargetA[0] = TARGET_UNIT_NEARBY_ENEMY;
+			spellInfo->EffectImplicitTargetB[0] = 0;
+			spellInfo->AttributesEx4 |= SPELL_ATTR4_CAN_CAST_WHILE_CASTING;
+			break;
 
         //////////////////////////////////////////
         ////////// DRAK'THARON KEEP

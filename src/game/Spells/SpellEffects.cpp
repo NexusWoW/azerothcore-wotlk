@@ -353,6 +353,17 @@ void Spell::EffectSchoolDMG(SpellEffIndex effIndex)
                         damage = (m_caster->getLevel() - 60) * 4 + 60;
                         break;
                     }
+					// Shadow Blast
+					case 56698:
+					case 59102:
+					{
+						// http://www.wowhead.com/spell=56698
+						// http://www.wowhead.com/spell=59102
+						// 65% / 80% of player's health as Shadow Damage.
+						// Surely there's an attribute for this?
+						damage = unitTarget->GetMaxHealth() * (m_spellValue->EffectBasePoints[0] / 100.0f);
+						break;
+					}
                 }
                 break;
             }
