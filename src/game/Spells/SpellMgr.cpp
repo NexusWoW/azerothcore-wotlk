@@ -5846,6 +5846,10 @@ void SpellMgr::LoadDbcDataCorrections()
         // ///////////////////////////////////////////
         // ////////////////QUESTS/////////////////////
         // ///////////////////////////////////////////
+		// Convocation at Zol'Heb (12730)
+		case 52956:
+			spellInfo->EffectImplicitTargetA[0] = TARGET_UNIT_DEST_AREA_ENTRY;
+			break;
         // Going Bearback (12851)
         case 54897:
             spellInfo->Effect[1] = SPELL_EFFECT_DUMMY;
