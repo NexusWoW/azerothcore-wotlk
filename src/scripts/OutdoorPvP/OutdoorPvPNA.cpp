@@ -173,7 +173,7 @@ bool OPvPCapturePointNA::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(NA_UI_TOWER_SLIDER_DISPLAY, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(NA_UI_TOWER_SLIDER_POS, phase);
-        player->SendUpdateWorldState(NA_UI_TOWER_SLIDER_N, m_neutralValuePct);
+        //player->SendUpdateWorldState(NA_UI_TOWER_SLIDER_N, m_neutralValuePct);
         return true;
     }
     return false;
@@ -601,7 +601,7 @@ void OPvPCapturePointNA::SendChangePhase()
     // send these updates to only the ones in this objective
     uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
     SendUpdateWorldState(NA_UI_TOWER_SLIDER_POS, phase);
-    SendUpdateWorldState(NA_UI_TOWER_SLIDER_N, m_neutralValuePct);
+    //SendUpdateWorldState(NA_UI_TOWER_SLIDER_N, m_neutralValuePct);
 }
 
 void OPvPCapturePointNA::UpdateHalaaWorldState()

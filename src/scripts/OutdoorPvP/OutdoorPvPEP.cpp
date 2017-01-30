@@ -95,7 +95,7 @@ void OPvPCapturePointEP_EWT::SendChangePhase()
     uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
     SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
     // send this too, sometimes it resets :S
-    SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+    //SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
 }
 
 void OPvPCapturePointEP_EWT::FillInitialWorldStates(WorldPacket &data)
@@ -123,7 +123,7 @@ bool OPvPCapturePointEP_EWT::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_DISPLAY, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
-        player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+        //player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
         return true;
     }
     return false;
@@ -243,7 +243,7 @@ void OPvPCapturePointEP_NPT::SendChangePhase()
     uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
     SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
     // send this too, sometimes it resets :S
-    SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+    //SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
 }
 
 void OPvPCapturePointEP_NPT::FillInitialWorldStates(WorldPacket &data)
@@ -271,7 +271,7 @@ bool OPvPCapturePointEP_NPT::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_DISPLAY, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
-        player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+        //player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
         return true;
     }
     return false;
@@ -375,7 +375,7 @@ void OPvPCapturePointEP_CGT::SendChangePhase()
     uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
     SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
     // send this too, sometimes it resets :S
-    SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+    //SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
 }
 
 void OPvPCapturePointEP_CGT::FillInitialWorldStates(WorldPacket &data)
@@ -403,7 +403,7 @@ bool OPvPCapturePointEP_CGT::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_DISPLAY, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
-        player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+        //player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
         return true;
     }
     return false;
@@ -514,7 +514,7 @@ void OPvPCapturePointEP_PWT::SendChangePhase()
     uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
     SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
     // send this too, sometimes it resets :S
-    SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+    //SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
 }
 
 void OPvPCapturePointEP_PWT::FillInitialWorldStates(WorldPacket &data)
@@ -542,7 +542,7 @@ bool OPvPCapturePointEP_PWT::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_DISPLAY, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_POS, phase);
-        player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+        //player->SendUpdateWorldState(EP_UI_TOWER_SLIDER_N, m_neutralValuePct);
         return true;
     }
     return false;

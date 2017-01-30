@@ -48,7 +48,7 @@ bool OPvPCapturePointZM_Beacon::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(ZMBeaconInfo[m_TowerType].slider_disp, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(ZMBeaconInfo[m_TowerType].slider_pos, phase);
-        player->SendUpdateWorldState(ZMBeaconInfo[m_TowerType].slider_n, m_neutralValuePct);
+        //player->SendUpdateWorldState(ZMBeaconInfo[m_TowerType].slider_n, m_neutralValuePct);
         return true;
     }
     return false;
@@ -116,7 +116,7 @@ void OPvPCapturePointZM_Beacon::SendChangePhase()
     // send these updates to only the ones in this objective
     uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
     SendUpdateWorldState(ZMBeaconInfo[m_TowerType].slider_pos, phase);
-    SendUpdateWorldState(ZMBeaconInfo[m_TowerType].slider_n, m_neutralValuePct);
+    //SendUpdateWorldState(ZMBeaconInfo[m_TowerType].slider_n, m_neutralValuePct);
 }
 
 bool OutdoorPvPZM::Update(uint32 diff)

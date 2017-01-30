@@ -66,7 +66,7 @@ bool OPvPCapturePointGH::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(GH_UI_SLIDER_DISPLAY, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(GH_UI_SLIDER_POS, phase);
-        player->SendUpdateWorldState(GH_UI_SLIDER_N, m_neutralValuePct);
+        //player->SendUpdateWorldState(GH_UI_SLIDER_N, m_neutralValuePct);
         return true;
     }
     return false;

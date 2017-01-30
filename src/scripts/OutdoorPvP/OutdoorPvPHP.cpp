@@ -263,12 +263,12 @@ void OPvPCapturePointHP::ChangeState()
 
 void OPvPCapturePointHP::SendChangePhase()
 {
-    SendUpdateWorldState(HP_UI_TOWER_SLIDER_N, m_neutralValuePct);
     // send these updates to only the ones in this objective
+	// send worldstate display toggle first, then percentage, this will allow the directional indicators to appear.
     uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
+	SendUpdateWorldState(HP_UI_TOWER_SLIDER_DISPLAY, 1);
     SendUpdateWorldState(HP_UI_TOWER_SLIDER_POS, phase);
-    // send this too, sometimes the slider disappears, dunno why :(
-    SendUpdateWorldState(HP_UI_TOWER_SLIDER_DISPLAY, 1);
+	//SendUpdateWorldState(HP_UI_TOWER_SLIDER_N, m_neutralValuePct);
 }
 
 void OPvPCapturePointHP::FillInitialWorldStates(WorldPacket &data)
@@ -305,7 +305,7 @@ bool OPvPCapturePointHP::HandlePlayerEnter(Player* player)
         player->SendUpdateWorldState(HP_UI_TOWER_SLIDER_DISPLAY, 1);
         uint32 phase = (uint32)ceil((m_value + m_maxValue) / (2 * m_maxValue) * 100.0f);
         player->SendUpdateWorldState(HP_UI_TOWER_SLIDER_POS, phase);
-        player->SendUpdateWorldState(HP_UI_TOWER_SLIDER_N, m_neutralValuePct);
+        //player->SendUpdateWorldState(HP_UI_TOWER_SLIDER_N, m_neutralValuePct);
         return true;
     }
     return false;
