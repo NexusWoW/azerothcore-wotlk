@@ -8077,9 +8077,10 @@ bool WorldObjectSpellTargetCheck::operator()(WorldObject* target)
                     return false;
                 break;
             case TARGET_CHECK_RAID_CLASS:
-                if (_referer->GetTypeId() == unitTarget->GetTypeId())
-                    if (_referer->getClass() != unitTarget->getClass())
-                        return false;
+				if (_referer->GetTypeId() != unitTarget->GetTypeId())
+					return false;
+				if (_referer->getClass() != unitTarget->getClass())
+					return false;
                 // nobreak;
             case TARGET_CHECK_RAID:
                 if (unitTarget->IsTotem())
