@@ -826,14 +826,7 @@ InstanceScript* m_pInstance;
                         Unit* Flame = ObjectAccessor::GetUnit(*me, FlameGUID);
                         if (Flame && Flame->IsAlive())
                         DoCast(Flame, SPELL_SYSTEMS_SHUTDOWN, true);
-                        }
-                        
-                        
-                        
-                        
-                        
-                        
-                        
+                        }         
             }
 
             bool CanAIAttack(Unit const* who) const
