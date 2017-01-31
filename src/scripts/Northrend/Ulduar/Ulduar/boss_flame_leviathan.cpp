@@ -799,6 +799,7 @@ class boss_flame_leviathan_defense_turret : public CreatureScript
                 _setHealth = false;
             }
 
+InstanceScript* m_pInstance;
             bool _setHealth;
             void DamageTaken(Unit* who, uint32 &damage, DamageEffectType, SpellSchoolMask)
             {
@@ -817,6 +818,22 @@ class boss_flame_leviathan_defense_turret : public CreatureScript
                 if (Vehicle* vehicle = me->GetVehicle())
                     if (Unit* device = vehicle->GetPassenger(SEAT_DEVICE))
                         device->SetUInt32Value(UNIT_FIELD_FLAGS, 0); // unselectable
+                        
+                        
+                        uint64 FlameGUID = m_pInstance->GetData(TYPE_LEVIATHAN);
+                        if (FlameGUID)
+                        {
+                        Unit* Flame = ObjectAccessor::GetUnit(*me, FlameGUID);
+                        if (Flame && Flame->IsAlive())
+                        DoCast(Flame, SPELL_SYSTEMS_SHUTDOWN, true);
+                        }
+                        
+                        
+                        
+                        
+                        
+                        
+                        
             }
 
             bool CanAIAttack(Unit const* who) const
