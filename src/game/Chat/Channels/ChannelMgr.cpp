@@ -87,6 +87,7 @@ Channel* ChannelMgr::GetJoinChannel(std::string const& name, uint32 channelId)
 {
     std::wstring wname;
     Utf8toWStr(name, wname);
+    wstrToLower(wname);
 
     ChannelMap::const_iterator i = channels.find(wname);
 
