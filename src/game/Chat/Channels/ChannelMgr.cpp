@@ -87,15 +87,12 @@ Channel* ChannelMgr::GetJoinChannel(std::string const& name, uint32 channelId)
 {
     std::wstring wname;
     Utf8toWStr(name, wname);
-    wstrToLower(wname);
 
     ChannelMap::const_iterator i = channels.find(wname);
 
     if (i == channels.end())
     {
-        std::string chNameLower = name;
-        std::transform(chNameLower.begin(), chNameLower.end(), chNameLower.begin(), ::tolower);
-        Channel* nchan = new Channel(chNameLower, channelId, 0, _teamId);
+        Channel* nchan = new Channel(name, channelId, 0, _teamId);
         channels[wname] = nchan;
         return nchan;
     }
