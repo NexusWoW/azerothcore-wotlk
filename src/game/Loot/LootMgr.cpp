@@ -278,17 +278,34 @@ void LootStore::ReportNotExistedId(uint32 id) const
 
 // Checks if the entry (quest, non-quest, reference) takes it's chance (at loot generation)
 // RATE_DROP_ITEMS is no longer used for all types of entries
-bool LootStoreItem::Roll(bool rate) const
+bool LootStoreItem::Roll(bool rate, uint32 customRate) const
 {
     if (chance >= 100.0f)
         return true;
 
-    if (mincountOrRef < 0)                                   // reference case
-        return roll_chance_f(chance* (rate ? sWorld->getRate(RATE_DROP_ITEM_REFERENCED) : 1.0f));
+	// reference case
+	if (mincountOrRef < 0)
+	{
+		// Allow for loot rate tweaking.
+		bool returnVal;
+
+		if (sWorld->getBoolConfig(CONFIG_CUSTOM_LOOT_RATE))
+			returnVal = roll_chance_f(chance* (rate ? sWorld->getRate(RATE_DROP_ITEM_REFERENCED) * customRate : 1.0f));
+		else
+			returnVal = roll_chance_f(chance* (rate ? sWorld->getRate(RATE_DROP_ITEM_REFERENCED) : 1.0f));
+
+		return returnVal;
+	}
 
     ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(itemid);
 
-    float qualityModifier = pProto && rate ? sWorld->getRate(qualityToRate[pProto->Quality]) : 1.0f;
+	float qualityModifier;
+	
+	// Allow for loot rate tweaking.
+	if (sWorld->getBoolConfig(CONFIG_CUSTOM_LOOT_RATE))
+		qualityModifier = pProto && rate ? sWorld->getRate(qualityToRate[pProto->Quality]) * customRate : 1.0f;
+	else
+		qualityModifier = pProto && rate ? sWorld->getRate(qualityToRate[pProto->Quality]) : 1.0f;
 
     return roll_chance_f(chance*qualityModifier);
 }
@@ -461,7 +478,10 @@ bool Loot::FillLoot(uint32 lootId, LootStore const& store, Player* lootOwner, bo
     items.reserve(MAX_NR_LOOT_ITEMS);
     quest_items.reserve(MAX_NR_QUEST_ITEMS);
 
-    tab->Process(*this, store.IsRatesAllowed(), lootMode);          // Processing is done there, callback via Loot::AddItem()
+	if (sWorld->getBoolConfig(CONFIG_CUSTOM_LOOT_RATE))
+		tab->Process(*this, store.IsRatesAllowed(), lootMode, 0, lootOwner->GetCustomLootRate());
+	else
+		tab->Process(*this, store.IsRatesAllowed(), lootMode, 0, 0);
 
     // Setting access rights for group loot case
     Group* group = lootOwner->GetGroup();
@@ -1296,7 +1316,7 @@ void LootTemplate::CopyConditions(LootItem* li) const
 }
 
 // Rolls for every item in the template and adds the rolled items the the loot
-void LootTemplate::Process(Loot& loot, bool rate, uint16 lootMode, uint8 groupId) const
+void LootTemplate::Process(Loot& loot, bool rate, uint16 lootMode, uint8 groupId, uint32 customRate) const
 {
     if (groupId)                                            // Group reference uses own processing of the group
     {
@@ -1317,7 +1337,7 @@ void LootTemplate::Process(Loot& loot, bool rate, uint16 lootMode, uint8 groupId
         if (!(item->lootmode & lootMode))                         // Do not add if mode mismatch
             continue;
 
-        if (!item->Roll(rate))
+        if (!item->Roll(rate, customRate))
             continue;                                           // Bad luck for the entry
 
         if (item->mincountOrRef < 0)                            // References processing

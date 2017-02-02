@@ -1,0 +1,5 @@
+INSERT INTO `command` VALUES ('rate xp active', 3, 'Syntax: .rate xp active $value\r\nToggles the functionality of custom experience rates. A value of 0 will switch this functionality off, whereas a value of 1 will switch it on.');
+INSERT INTO `command` VALUES ('rate xp set', 0, 'Syntax: .rate xp set $value\r\nSets your XP multiplier to $value. If no parameter is provided, it will show your current XP rate.');
+INSERT INTO `command` VALUES ('rate loot active', 3, 'Syntax: .rate xp active $value\r\nToggles the functionality of custom loot rates. A value of 0 will switch this functionality off, whereas a value of 1 will switch it on.');
+INSERT INTO `command` VALUES ('rate loot set', 0, 'Syntax: .rate loot set $value\r\nSets your loot multiplier to $value. If no parameter is provided, it will show your current loot rate. A $value of 0 means you won\'t be able to loot anything.');
+INSERT INTO `command` VALUES ('rate', 0, 'Syntax: .rate $subcommandType .rate to see a list of possible subcommands or .help rate $subcommand to see info on the subcommand.');
