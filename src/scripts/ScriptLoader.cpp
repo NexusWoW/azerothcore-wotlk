@@ -570,6 +570,9 @@ void AddSC_outdoorpvp_gh();
 // player
 void AddSC_chat_log();
 
+// custom rates
+void AddSC_Custom_Rates();
+
 #endif
 
 void AddSpellScripts()
@@ -1165,3 +1168,9 @@ void AddOutdoorPvPScripts()
 #endif
 }
 
+void AddCustomScripts()
+{
+#ifdef SCRIPTS
+	AddSC_Custom_Rates();
+#endif
+}

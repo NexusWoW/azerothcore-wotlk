@@ -2550,6 +2550,13 @@ class Player : public Unit, public GridObject<Player>
             }
         }
 
+		// Custom exp / loot rate accessors.
+		void SetCustomXPRate(uint32 rate) { m_customExpRate = rate; }
+		uint32 GetCustomXPRate() const { return m_customExpRate; }
+
+		void SetCustomLootRate(uint32 rate) { m_customLootRate = rate; }
+		uint32 GetCustomLootRate() const { return m_customLootRate; }
+
         // OURS
         // saving
         void AdditionalSavingAddMask(uint8 mask) { m_additionalSaveTimer = 2000; m_additionalSaveMask |= mask; }
@@ -2934,6 +2941,10 @@ class Player : public Unit, public GridObject<Player>
         InstanceTimeMap _instanceResetTimes;
         uint32 _pendingBindId;
         uint32 _pendingBindTimer;
+
+		// Custom exp / loot rates.
+		uint32 m_customExpRate;
+		uint32 m_customLootRate;
 
         // duel health and mana reset attributes
         uint32 healthBeforeDuel;

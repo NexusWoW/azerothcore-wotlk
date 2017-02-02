@@ -444,6 +444,58 @@ void World::LoadConfigSettings(bool reload)
     ///- Send server info on login?
     m_int_configs[CONFIG_ENABLE_SINFO_LOGIN] = sConfigMgr->GetIntDefault("Server.LoginInfo", 0);
 
+	// Custom exp / loot rates.
+	m_bool_configs[CONFIG_CUSTOM_XP_RATE] = sConfigMgr->GetBoolDefault("CustomRates.Exp.Enabled", false);
+	m_bool_configs[CONFIG_CUSTOM_LOOT_RATE] = sConfigMgr->GetBoolDefault("CustomRates.Loot.Enabled", false);
+
+	// Individual XP/loot rates
+	int sec = sConfigMgr->GetIntDefault("CustomRates.Exp.Security", 0);
+
+	if (sec < SEC_PLAYER || sec > SEC_ADMINISTRATOR)
+	{
+		sLog->outError("CustomRates.Exp.Security has invalid security `%i`, must be between `%i and `%i`, defaulting to 0 ...",
+			sec, SEC_PLAYER, SEC_ADMINISTRATOR);
+
+		m_int_configs[CONFIG_CUSTOM_XP_RATE_SECURITY] = 0;
+	}
+	else
+		m_int_configs[CONFIG_CUSTOM_XP_RATE_SECURITY] = sec;
+
+	sec = sConfigMgr->GetIntDefault("CustomRates.Loot.Security", 0);
+
+	if (sec < SEC_PLAYER || sec > SEC_ADMINISTRATOR)
+	{
+		sLog->outError("CustomRates.Loot.Security has invalid security `%i`, must be between `%i and `%i`, defaulting to 0 ...",
+			sec, SEC_PLAYER, SEC_ADMINISTRATOR);
+
+		m_int_configs[CONFIG_CUSTOM_LOOT_RATE_SECURITY] = 0;
+	}
+	else
+		m_int_configs[CONFIG_CUSTOM_LOOT_RATE_SECURITY] = sec;
+
+	int maxXpRate = sConfigMgr->GetIntDefault("CustomRates.Exp.MaxRate", 1);
+
+	if (maxXpRate < 1)
+	{
+		sLog->outError("CustomRates.Exp.MaxRate has too low value `%i`, defaulting to 1 ...", maxXpRate);
+		m_int_configs[CONFIG_CUSTOM_XP_RATE_MAX] = 1;
+	}
+	else
+		m_int_configs[CONFIG_CUSTOM_XP_RATE_MAX] = maxXpRate;
+
+	maxXpRate = sConfigMgr->GetIntDefault("CustomRates.Loot.MaxRate", 1);
+
+	if (maxXpRate < 1)
+	{
+		sLog->outError("CustomRates.Loot.MaxRate has too low value `%i`, defaulting to 1 ...", maxXpRate);
+		m_int_configs[CONFIG_CUSTOM_LOOT_RATE_MAX] = 1;
+	}
+	else
+		m_int_configs[CONFIG_CUSTOM_LOOT_RATE_MAX] = maxXpRate;
+
+	m_bool_configs[CONFIG_CUSTOM_XP_RATE_SHOW_ON_LOGIN] = sConfigMgr->GetBoolDefault("CustomRates.Exp.ShowOnLogin", true);
+	m_bool_configs[CONFIG_CUSTOM_LOOT_RATE_SHOW_ON_LOGIN] = sConfigMgr->GetBoolDefault("CustomRates.Loot.ShowOnLogin", true);
+
     ///- Read all rates from the config file
     rate_values[RATE_HEALTH]      = sConfigMgr->GetFloatDefault("Rate.Health", 1);
     if (rate_values[RATE_HEALTH] < 0)

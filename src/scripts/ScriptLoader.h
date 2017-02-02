@@ -19,5 +19,6 @@ void AddOutlandScripts();
 void AddNorthrendScripts();
 void AddPetScripts();
 void AddOutdoorPvPScripts();
+void AddCustomScripts();
 
 #endif

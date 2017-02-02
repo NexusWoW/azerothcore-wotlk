@@ -906,6 +906,10 @@ Player::Player(WorldSession* session): Unit(true), m_mover(this)
     m_achievementMgr = new AchievementMgr(this);
     m_reputationMgr = new ReputationMgr(this);
 
+	// Custom exp / loot rates.
+	m_customExpRate = 1;
+	m_customLootRate = 1;
+
     // Ours
     m_NeedToSaveGlyphs = false;
     m_comboPointGain = 0;
@@ -6908,6 +6912,10 @@ void Player::CheckAreaExploreAndOutdoor()
                 {
                     XP = uint32(sObjectMgr->GetBaseXP(areaEntry->area_level)*sWorld->getRate(RATE_XP_EXPLORE));
                 }
+
+				// Modify experience gain based on player's custom rate.
+				if (sWorld->getBoolConfig(CONFIG_CUSTOM_XP_RATE))
+					XP *= GetCustomXPRate();
 
                 GiveXP(XP, NULL);
                 SendExplorationExperience(area, XP);
@@ -15468,97 +15476,106 @@ void Player::IncompleteQuest(uint32 quest_id)
 }
 
 void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, bool announce)
-{ 
-    //this THING should be here to protect code from quest, which cast on player far teleport as a reward
-    //should work fine, cause far teleport will be executed in Player::Update()
-    SetMustDelayTeleport(true);
+{
+	//this THING should be here to protect code from quest, which cast on player far teleport as a reward
+	//should work fine, cause far teleport will be executed in Player::Update()
+	SetMustDelayTeleport(true);
 
-    uint32 quest_id = quest->GetQuestId();
+	uint32 quest_id = quest->GetQuestId();
 
-    for (uint8 i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; ++i)
-        if (quest->RequiredItemId[i])
-            DestroyItemCount(quest->RequiredItemId[i], quest->RequiredItemCount[i], true);
+	for (uint8 i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; ++i)
+		if (quest->RequiredItemId[i])
+			DestroyItemCount(quest->RequiredItemId[i], quest->RequiredItemCount[i], true);
 
-    for (uint8 i = 0; i < QUEST_SOURCE_ITEM_IDS_COUNT; ++i)
-    {
-        if (quest->RequiredSourceItemId[i])
-        {
-            uint32 count = quest->RequiredSourceItemCount[i];
-            DestroyItemCount(quest->RequiredSourceItemId[i], count ? count : 9999, true);
-        }
-    }
+	for (uint8 i = 0; i < QUEST_SOURCE_ITEM_IDS_COUNT; ++i)
+	{
+		if (quest->RequiredSourceItemId[i])
+		{
+			uint32 count = quest->RequiredSourceItemCount[i];
+			DestroyItemCount(quest->RequiredSourceItemId[i], count ? count : 9999, true);
+		}
+	}
 
-    RemoveTimedQuest(quest_id);
+	RemoveTimedQuest(quest_id);
 
-    std::vector<std::pair<uint32, uint32> > problematicItems;
+	std::vector<std::pair<uint32, uint32> > problematicItems;
 
-    if (quest->GetRewChoiceItemsCount() > 0)
-    {
-        if (uint32 itemId = quest->RewardChoiceItemId[reward])
-        {
-            ItemPosCountVec dest;
-            if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, quest->RewardChoiceItemCount[reward]) == EQUIP_ERR_OK)
-            {
-                Item* item = StoreNewItem(dest, itemId, true, Item::GenerateItemRandomPropertyId(itemId));
-                SendNewItem(item, quest->RewardChoiceItemCount[reward], true, false);
-                
-                sScriptMgr->OnQuestRewardItem(this, item, quest->RewardChoiceItemCount[reward]);
-            }
-            else
-                problematicItems.push_back(std::pair<uint32, uint32>(itemId, quest->RewardChoiceItemCount[reward]));
-        }
-    }
+	if (quest->GetRewChoiceItemsCount() > 0)
+	{
+		if (uint32 itemId = quest->RewardChoiceItemId[reward])
+		{
+			ItemPosCountVec dest;
+			if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, quest->RewardChoiceItemCount[reward]) == EQUIP_ERR_OK)
+			{
+				Item* item = StoreNewItem(dest, itemId, true, Item::GenerateItemRandomPropertyId(itemId));
+				SendNewItem(item, quest->RewardChoiceItemCount[reward], true, false);
 
-    if (quest->GetRewItemsCount() > 0)
-    {
-        for (uint32 i = 0; i < quest->GetRewItemsCount(); ++i)
-        {
-            if (uint32 itemId = quest->RewardItemId[i])
-            {
-                ItemPosCountVec dest;
-                if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, quest->RewardItemIdCount[i]) == EQUIP_ERR_OK)
-                {
-                    Item* item = StoreNewItem(dest, itemId, true, Item::GenerateItemRandomPropertyId(itemId));
-                    SendNewItem(item, quest->RewardItemIdCount[i], true, false);
-                    
-                    sScriptMgr->OnQuestRewardItem(this, item, quest->RewardItemIdCount[i]);
-                }
-                else
-                    problematicItems.push_back(std::pair<uint32, uint32>(itemId, quest->RewardItemIdCount[i]));
-            }
-        }
-    }
+				sScriptMgr->OnQuestRewardItem(this, item, quest->RewardChoiceItemCount[reward]);
+			}
+			else
+				problematicItems.push_back(std::pair<uint32, uint32>(itemId, quest->RewardChoiceItemCount[reward]));
+		}
+	}
 
-    // Xinef: send items that couldn't be added properly by mail
-    if (!problematicItems.empty())
-    {
-        SQLTransaction trans = CharacterDatabase.BeginTransaction();
-        MailSender sender(MAIL_CREATURE, 34337 /* The Postmaster */ );
-        MailDraft draft("Recovered Item", "We recovered a lost item in the twisting nether and noted that it was yours.$B$BPlease find said object enclosed."); // This is the text used in Cataclysm, it probably wasn't changed.
-        
-        for (std::vector<std::pair<uint32, uint32> >::const_iterator itr = problematicItems.begin(); itr != problematicItems.end(); ++itr)
-        {
-            if(Item* item = Item::CreateItem(itr->first, itr->second))
-            {
-                item->SaveToDB(trans);
-                draft.AddItem(item);
-            }
-        }
+	if (quest->GetRewItemsCount() > 0)
+	{
+		for (uint32 i = 0; i < quest->GetRewItemsCount(); ++i)
+		{
+			if (uint32 itemId = quest->RewardItemId[i])
+			{
+				ItemPosCountVec dest;
+				if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, quest->RewardItemIdCount[i]) == EQUIP_ERR_OK)
+				{
+					Item* item = StoreNewItem(dest, itemId, true, Item::GenerateItemRandomPropertyId(itemId));
+					SendNewItem(item, quest->RewardItemIdCount[i], true, false);
 
-        draft.SendMailTo(trans, MailReceiver(this, this->GetGUIDLow()), sender);
-        CharacterDatabase.CommitTransaction(trans);
-    }
+					sScriptMgr->OnQuestRewardItem(this, item, quest->RewardItemIdCount[i]);
+				}
+				else
+					problematicItems.push_back(std::pair<uint32, uint32>(itemId, quest->RewardItemIdCount[i]));
+			}
+		}
+	}
 
-    RewardReputation(quest);
+	// Xinef: send items that couldn't be added properly by mail
+	if (!problematicItems.empty())
+	{
+		SQLTransaction trans = CharacterDatabase.BeginTransaction();
+		MailSender sender(MAIL_CREATURE, 34337 /* The Postmaster */);
+		MailDraft draft("Recovered Item", "We recovered a lost item in the twisting nether and noted that it was yours.$B$BPlease find said object enclosed."); // This is the text used in Cataclysm, it probably wasn't changed.
 
-    uint16 log_slot = FindQuestSlot(quest_id);
-    if (log_slot < MAX_QUEST_LOG_SIZE)
-        SetQuestSlot(log_slot, 0);
+		for (std::vector<std::pair<uint32, uint32> >::const_iterator itr = problematicItems.begin(); itr != problematicItems.end(); ++itr)
+		{
+			if (Item* item = Item::CreateItem(itr->first, itr->second))
+			{
+				item->SaveToDB(trans);
+				draft.AddItem(item);
+			}
+		}
 
-    bool rewarded = IsQuestRewarded(quest_id) && !quest->IsDFQuest();
+		draft.SendMailTo(trans, MailReceiver(this, this->GetGUIDLow()), sender);
+		CharacterDatabase.CommitTransaction(trans);
+	}
 
-    // Not give XP in case already completed once repeatable quest
-    uint32 XP = rewarded ? 0 : uint32(quest->XPValue(this)*sWorld->getRate(RATE_XP_QUEST));
+	RewardReputation(quest);
+
+	uint16 log_slot = FindQuestSlot(quest_id);
+	if (log_slot < MAX_QUEST_LOG_SIZE)
+		SetQuestSlot(log_slot, 0);
+
+	bool rewarded = IsQuestRewarded(quest_id) && !quest->IsDFQuest();
+
+	// Not give XP in case already completed once repeatable quest
+	uint32 XP = 0;
+
+	// Allow for custom exp rates.
+	if (!rewarded)
+	{
+		if (sWorld->getBoolConfig(CONFIG_CUSTOM_XP_RATE))
+			XP = uint32(quest->XPValue(this) * sWorld->getRate(RATE_XP_QUEST) * GetCustomXPRate());
+		else
+			XP = uint32(quest->XPValue(this) * sWorld->getRate(RATE_XP_QUEST));
+	}
 
     // handle SPELL_AURA_MOD_XP_QUEST_PCT auras
     Unit::AuraEffectList const& ModXPPctAuras = GetAuraEffectsByType(SPELL_AURA_MOD_XP_QUEST_PCT);
