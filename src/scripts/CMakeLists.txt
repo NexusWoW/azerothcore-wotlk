@@ -47,10 +47,7 @@ if(SCRIPTS)
   include(Northrend/CMakeLists.txt)
   include(Events/CMakeLists.txt)
   include(Pet/CMakeLists.txt)
-endif()
-
-if(EXISTS "Custom/CMakeLists.txt")
-include(Custom/CMakeLists.txt)
+  include(Custom/CMakeLists.txt)
 endif()
 
 CU_GET_GLOBAL("AC_ADD_SCRIPTS_LIST")
