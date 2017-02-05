@@ -180,7 +180,7 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player, bool loginCheck)
                 corpseMap = corpseInstance ? corpseInstance->Parent : 0;
             } while (corpseMap);
 
-            if (!corpseMap)
+            if (!corpseMap && mapid != corpseMap)
             {
                 WorldPacket data(SMSG_CORPSE_NOT_IN_INSTANCE, 0);
                 player->GetSession()->SendPacket(&data);
