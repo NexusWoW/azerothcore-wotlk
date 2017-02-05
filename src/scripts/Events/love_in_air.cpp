@@ -15,6 +15,11 @@
 ////// GOS
 ///////////////////////////////////////
 
+enum Gossips
+{
+	GOSSIP_TEXT_BEGIN_BATTLE = 10847
+};
+
 ///////////////////////////////////////
 ////// NPCS
 ///////////////////////////////////////
@@ -279,10 +284,21 @@ class npc_love_in_air_hummel : public CreatureScript
             EventMap events;
             uint32 speachTimer;
 
+			void sGossipSelect(Player* player, uint32 menuId, uint32 /*gossipListId*/) override
+			{
+				if (menuId == GOSSIP_TEXT_BEGIN_BATTLE)
+				{
+					me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+					player->PlayerTalkClass->SendCloseGossip();
+					DoAction(ACTION_START_EVENT);
+				}
+			}
+
             void Reset()
             {
                 speachTimer = 0;
                 me->setFaction(35);
+				me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 summons.DespawnAll();
                 events.Reset();
                 me->SummonCreature(NPC_APOTHECARY_FRYE, -205.449f, 2219.56f, 79.7633f, 0.7f);
@@ -291,7 +307,7 @@ class npc_love_in_air_hummel : public CreatureScript
 
             void DoAction(int32 param)
             {
-                if (param == ACTION_START_EVENT)
+                if (param == ACTION_START_EVENT && speachTimer == 0);
                     speachTimer = 1;
             }
 
