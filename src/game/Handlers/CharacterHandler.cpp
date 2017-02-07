@@ -1136,6 +1136,33 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder* holder)
     // Load pet if any (if player not alive and in taxi flight or another then pet will remember as temporary unsummoned)
     pCurrChar->LoadPet();
 
+	// If the player has been recruited, let's ping the recruiter.
+	if (pCurrChar->GetSession()->GetRecruiterId() != 0 || pCurrChar->GetSession()->IsARecruiter())
+	{
+		// Are we the recruiter or recruit?
+		bool isReferrer = pCurrChar->GetSession()->IsARecruiter();
+
+		// Loop through all sessions and find active RAFs.. ugly but this ensures the ping is done straight away.
+		for (SessionMap::const_iterator itr = sWorld->GetAllSessions().begin(); itr != sWorld->GetAllSessions().end(); ++itr)
+		{
+			// Skip non-RAF flagged sessions.
+			if (!itr->second->GetRecruiterId() && !itr->second->IsARecruiter())
+				continue;
+
+			// Match either on recruit or recruiter, message needs to be sent two ways to ensure both players have the RaF menu functions.
+			if (isReferrer && pCurrChar->GetSession()->GetAccountId() == itr->second->GetRecruiterId() || !isReferrer && pCurrChar->GetSession()->GetRecruiterId() == itr->second->GetAccountId())
+			{
+				Player * rf = itr->second->GetPlayer();
+
+				if (rf != NULL)
+				{
+					pCurrChar->SendUpdateToPlayer(rf);
+					rf->SendUpdateToPlayer(pCurrChar);
+				}
+			}
+		}
+	}
+
     sScriptMgr->OnPlayerLogin(pCurrChar);
     delete holder;
 }
