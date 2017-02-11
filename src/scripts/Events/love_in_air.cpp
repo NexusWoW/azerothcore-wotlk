@@ -307,7 +307,7 @@ class npc_love_in_air_hummel : public CreatureScript
 
             void DoAction(int32 param)
             {
-                if (param == ACTION_START_EVENT && speachTimer == 0);
+                if (param == ACTION_START_EVENT && speachTimer == 0)
                     speachTimer = 1;
             }
 
