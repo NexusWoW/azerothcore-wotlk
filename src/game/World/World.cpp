@@ -1325,12 +1325,12 @@ void World::SetInitialWorldSettings()
 
     ///- Initialize detour memory management
     dtAllocSetCustom(dtCustomAlloc, dtCustomFree);
-    
-    sLog->outString("Initializing Scripts...");
-    sScriptMgr->Initialize();
 
-    ///- Initialize config settings
-    LoadConfigSettings();
+	///- Initialize config settings
+	LoadConfigSettings();
+
+	//- Initialize scripts after core config settings have been loaded.
+	sScriptMgr->Initialize();
 
     ///- Initialize Allowed Security Level
     LoadDBAllowedSecurityLevel();
