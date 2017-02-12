@@ -248,7 +248,7 @@ void BattlegroundMgr::BuildPvpLogDataPacket(WorldPacket* data, Battleground* bg)
         }
         else
         {
-            *data << uint8(itr2->second->player->GetBgTeamId() == TEAM_ALLIANCE ? 1 : 0); // green or yellow
+            *data << uint8(itr2->second->player->GetTeam() == TEAM_ALLIANCE ? 1 : 0); // green or yellow
         }
         *data << uint32(itr2->second->DamageDone);              // damage done
         *data << uint32(itr2->second->HealingDone);             // healing done
@@ -753,8 +753,10 @@ void BattlegroundMgr::SendToBattleground(Player* player, uint32 instanceId, Batt
 {
     if (Battleground* bg = GetBattleground(instanceId))
     {
+		player->FitPlayerInTeam(true, bg);
+
         float x, y, z, o;
-        bg->GetTeamStartLoc(player->GetBgTeamId(), x, y, z, o);
+        bg->GetTeamStartLoc((TeamId)player->GetTeam(), x, y, z, o);
         player->TeleportTo(bg->GetMapId(), x, y, z, o);
     }
 }

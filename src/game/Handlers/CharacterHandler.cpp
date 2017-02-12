@@ -1164,6 +1164,10 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder* holder)
 	}
 
     sScriptMgr->OnPlayerLogin(pCurrChar);
+
+	if (pCurrChar->GetTeam() != pCurrChar->GetCFSTeam())
+		pCurrChar->FitPlayerInTeam(pCurrChar->GetBattleground() && !pCurrChar->GetBattleground()->isArena() ? true : false, pCurrChar->GetBattleground());
+
     delete holder;
 }
 

@@ -3078,3 +3078,16 @@ CustomRates.ShowLootRateOnLogin = 1
 
 #
 ###################################################################################################
+
+###################################################################################################
+#
+# CROSSFACTION BG CONFIG
+#
+# CrossfactionBG.Enable = 1 - Mixed battleground enabled.   
+# CrossfactionBG.Enable = 0 - Mixed battleground disabled.
+#
+
+CrossfactionBG.Enable = 1
+
+#
+###################################################################################################

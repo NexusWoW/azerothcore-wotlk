@@ -73,6 +73,7 @@
 #include "PoolMgr.h"
 #include "SavingSystem.h"
 #include "TicketMgr.h"
+#include "Crossfaction.h"
 
 #define ZONE_UPDATE_INTERVAL (2*IN_MILLISECONDS)
 
@@ -925,6 +926,12 @@ Player::Player(WorldSession* session): Unit(true), m_mover(this)
         m_charmAISpells[i] = 0;
 
     m_applyResilience = true;
+
+	m_ForgetBGPlayers = true;
+	m_ForgetInListPlayers = true;
+	m_FakeRace = 0;
+	m_RealRace = 0;
+	m_FakeMorph = 0;
 }
 
 Player::~Player()
@@ -1034,7 +1041,15 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     uint32 RaceClassGender = (createInfo->Race) | (createInfo->Class << 8) | (createInfo->Gender << 16);
 
     SetUInt32Value(UNIT_FIELD_BYTES_0, (RaceClassGender | (powertype << 24)));
+
+	// Crossfaction battlegrounds.
+	SetCFSRace();
+	m_team = TeamIdForRace(getCFSRace());
+	SetFakeRaceAndMorph(); // m_team must be set before this can be used.
+	setFactionForRace(getCFSRace());
+
     InitDisplayIds();
+
     if (sWorld->getIntConfig(CONFIG_GAME_TYPE) == REALM_TYPE_PVP || sWorld->getIntConfig(CONFIG_GAME_TYPE) == REALM_TYPE_RPPVP)
     {
         SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_PVP);
@@ -3214,7 +3229,7 @@ void Player::GiveLevel(uint8 level)
         guild->UpdateMemberData(this, GUILD_MEMBER_DATA_LEVEL, level);
 
     PlayerLevelInfo info;
-    sObjectMgr->GetPlayerLevelInfo(getRace(true), getClass(), level, &info);
+	sObjectMgr->GetPlayerLevelInfo(getCFSRace(), getClass(), level, &info);
 
     PlayerClassLevelInfo classInfo;
     sObjectMgr->GetPlayerClassLevelInfo(getClass(), level, &classInfo);
@@ -3328,7 +3343,7 @@ void Player::InitStatsForLevel(bool reapplyMods)
     sObjectMgr->GetPlayerClassLevelInfo(getClass(), getLevel(), &classInfo);
 
     PlayerLevelInfo info;
-    sObjectMgr->GetPlayerLevelInfo(getRace(true), getClass(), getLevel(), &info);
+	sObjectMgr->GetPlayerLevelInfo(getCFSRace(), getClass(), getLevel(), &info);
 
     SetUInt32Value(PLAYER_FIELD_MAX_LEVEL, sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL));
     SetUInt32Value(PLAYER_NEXT_LEVEL_XP, sObjectMgr->GetXPForLevel(getLevel()));
@@ -5263,7 +5278,7 @@ void Player::CreateCorpse()
     // prevent existence 2 corpse for player
     SpawnCorpseBones();
 
-    uint32 _uf, _pb, _pb2, _cfb1, _cfb2;
+	uint32 _uf, _pb, _pb2, _cfb1, _cfb2;
 
     Corpse* corpse = new Corpse((m_ExtraFlags & PLAYER_EXTRA_PVP_DEATH) ? CORPSE_RESURRECTABLE_PVP : CORPSE_RESURRECTABLE_PVE);
     SetPvPDeath(false);
@@ -5274,7 +5289,7 @@ void Player::CreateCorpse()
         return;
     }
 
-    _uf = GetUInt32Value(UNIT_FIELD_BYTES_0);
+	_uf = getCFSRace();
     _pb = GetUInt32Value(PLAYER_BYTES);
     _pb2 = GetUInt32Value(PLAYER_BYTES_2);
 
@@ -6943,16 +6958,62 @@ TeamId Player::TeamIdForRace(uint8 race)
 }
 
 void Player::setFactionForRace(uint8 race)
-{ 
-    m_team = TeamIdForRace(race);
+{
+	if (IsInWorld())
+	{
+		// Override player model if their race is not suitable for their faction.
+		if (TeamIdForRace(race) != GetBgTeamId())
+		{
+			race = getFRace();
+			SendChatMessage("%sYou are playing for the %s%s in this battleground.", MSG_COLOR_WHITE, TeamIdForRace(race) == TEAM_ALLIANCE ? MSG_COLOR_DARKBLUE"Alliance" : MSG_COLOR_RED"Horde", MSG_COLOR_WHITE);
+		}
 
-    sScriptMgr->OnPlayerUpdateFaction(this);
+		// Set appropriate team.
+		setTeamId(TeamIdForRace(race));
 
-    if (GetTeamId(true) != GetTeamId())
-        return;
+		// Update UNIT_FIELD_BYTES_0, which controls the scoreboard in BGs.
+		uint32 RaceClassGender = (race) | (getClass() << 8) | (getGender() << 16);
+		ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(uint32(getClass()));
+		SetUInt32Value(UNIT_FIELD_BYTES_0, (RaceClassGender | (cEntry->powerType << 24)));
 
-    ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
-    setFaction(rEntry ? rEntry->FactionID : 0);
+		// Only necessary if we do not have chat turned on.
+		// Add/remove languages as necessary.
+		// Orcish (Spell: 669, Skill: 109)
+		// Common (Spell: 668, Skill: 98)
+		if (TeamIdForRace(race) == TEAM_ALLIANCE)
+		{
+			if (HasSkill(SKILL_LANG_ORCISH))
+			{
+				SetSkill(SKILL_LANG_ORCISH, 0, 0, 0);
+				removeSpell(669, SPEC_MASK_ALL, false);
+			}
+
+			if (!HasSkill(SKILL_LANG_COMMON))
+			{
+				SetSkill(SKILL_LANG_COMMON, 0, 300, 300);
+				learnSpell(668);
+			}
+		}
+		else
+		{
+			if (HasSkill(SKILL_LANG_COMMON))
+			{
+				SetSkill(SKILL_LANG_COMMON, 0, 0, 0);
+				removeSpell(668, SPEC_MASK_ALL, false);
+			}
+
+			if (!HasSkill(SKILL_LANG_ORCISH))
+			{
+				SetSkill(SKILL_LANG_ORCISH, 300, 300, 300);
+				learnSpell(669);
+			}
+		}
+	}
+
+	sScriptMgr->OnPlayerUpdateFaction(this);
+
+	ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
+	setFaction(rEntry ? rEntry->FactionID : getFaction());
 }
 
 ReputationRank Player::GetReputationRank(uint32 faction) const
@@ -6963,96 +7024,117 @@ ReputationRank Player::GetReputationRank(uint32 faction) const
 
 // Calculate total reputation percent player gain with quest/creature level
 int32 Player::CalculateReputationGain(ReputationSource source, uint32 creatureOrQuestLevel, int32 rep, int32 faction, bool noQuestBonus)
-{ 
-    float percent = 100.0f;
+{
+	float percent = 100.0f;
 
-    float repMod = noQuestBonus ? 0.0f : float(GetTotalAuraModifier(SPELL_AURA_MOD_REPUTATION_GAIN));
+	float repMod = noQuestBonus ? 0.0f : float(GetTotalAuraModifier(SPELL_AURA_MOD_REPUTATION_GAIN));
 
-    // faction specific auras only seem to apply to kills
-    if (source == REPUTATION_SOURCE_KILL)
-        repMod += GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_FACTION_REPUTATION_GAIN, faction);
+	// faction specific auras only seem to apply to kills
+	if (source == REPUTATION_SOURCE_KILL)
+		repMod += GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_FACTION_REPUTATION_GAIN, faction);
 
-    percent += rep > 0 ? repMod : -repMod;
+	percent += rep > 0 ? repMod : -repMod;
 
-    float rate;
-    switch (source)
-    {
-        case REPUTATION_SOURCE_KILL:
-            rate = sWorld->getRate(RATE_REPUTATION_LOWLEVEL_KILL);
-            break;
-        case REPUTATION_SOURCE_QUEST:
-        case REPUTATION_SOURCE_DAILY_QUEST:
-        case REPUTATION_SOURCE_WEEKLY_QUEST:
-        case REPUTATION_SOURCE_MONTHLY_QUEST:
-        case REPUTATION_SOURCE_REPEATABLE_QUEST:
-            rate = sWorld->getRate(RATE_REPUTATION_LOWLEVEL_QUEST);
-            break;
-        case REPUTATION_SOURCE_SPELL:
-        default:
-            rate = 1.0f;
-            break;
-    }
+	float rate;
+	switch (source)
+	{
+	case REPUTATION_SOURCE_KILL:
+		rate = sWorld->getRate(RATE_REPUTATION_LOWLEVEL_KILL);
+		break;
+	case REPUTATION_SOURCE_QUEST:
+	case REPUTATION_SOURCE_DAILY_QUEST:
+	case REPUTATION_SOURCE_WEEKLY_QUEST:
+	case REPUTATION_SOURCE_MONTHLY_QUEST:
+	case REPUTATION_SOURCE_REPEATABLE_QUEST:
+		rate = sWorld->getRate(RATE_REPUTATION_LOWLEVEL_QUEST);
+		break;
+	case REPUTATION_SOURCE_SPELL:
+	default:
+		rate = 1.0f;
+		break;
+	}
 
-    if (rate != 1.0f && creatureOrQuestLevel <= Trinity::XP::GetGrayLevel(getLevel()))
-        percent *= rate;
+	if (rate != 1.0f && creatureOrQuestLevel <= Trinity::XP::GetGrayLevel(getLevel()))
+		percent *= rate;
 
-    if (percent <= 0.0f)
-        return 0;
+	if (percent <= 0.0f)
+		return 0;
 
-    // Multiply result with the faction specific rate
-    if (RepRewardRate const* repData = sObjectMgr->GetRepRewardRate(faction))
-    {
-        float repRate = 0.0f;
-        switch (source)
-        {
-            case REPUTATION_SOURCE_KILL:
-                repRate = repData->creatureRate;
-                break;
-            case REPUTATION_SOURCE_QUEST:
-                repRate = repData->questRate;
-                break;
-            case REPUTATION_SOURCE_DAILY_QUEST:
-                repRate = repData->questDailyRate;
-                break;
-            case REPUTATION_SOURCE_WEEKLY_QUEST:
-                repRate = repData->questWeeklyRate;
-                break;
-            case REPUTATION_SOURCE_MONTHLY_QUEST:
-                repRate = repData->questMonthlyRate;
-                break;
-            case REPUTATION_SOURCE_REPEATABLE_QUEST:
-                repRate = repData->questRepeatableRate;
-                break;
-            case REPUTATION_SOURCE_SPELL:
-                repRate = repData->spellRate;
-                break;
-        }
+	// Multiply result with the faction specific rate
+	if (RepRewardRate const* repData = sObjectMgr->GetRepRewardRate(faction))
+	{
+		float repRate = 0.0f;
+		switch (source)
+		{
+		case REPUTATION_SOURCE_KILL:
+			repRate = repData->creatureRate;
+			break;
+		case REPUTATION_SOURCE_QUEST:
+			repRate = repData->questRate;
+			break;
+		case REPUTATION_SOURCE_DAILY_QUEST:
+			repRate = repData->questDailyRate;
+			break;
+		case REPUTATION_SOURCE_WEEKLY_QUEST:
+			repRate = repData->questWeeklyRate;
+			break;
+		case REPUTATION_SOURCE_MONTHLY_QUEST:
+			repRate = repData->questMonthlyRate;
+			break;
+		case REPUTATION_SOURCE_REPEATABLE_QUEST:
+			repRate = repData->questRepeatableRate;
+			break;
+		case REPUTATION_SOURCE_SPELL:
+			repRate = repData->spellRate;
+			break;
+		}
 
-        // for custom, a rate of 0.0 will totally disable reputation gain for this faction/type
-        if (repRate <= 0.0f)
-            return 0;
+		// for custom, a rate of 0.0 will totally disable reputation gain for this faction/type
+		if (repRate <= 0.0f)
+			return 0;
 
-        percent *= repRate;
-    }
+		percent *= repRate;
+	}
 
-    if (source != REPUTATION_SOURCE_SPELL && GetsRecruitAFriendBonus(false))
-        percent *= 1.0f + sWorld->getRate(RATE_REPUTATION_RECRUIT_A_FRIEND_BONUS);
+	if (source != REPUTATION_SOURCE_SPELL && GetsRecruitAFriendBonus(false))
+		percent *= 1.0f + sWorld->getRate(RATE_REPUTATION_RECRUIT_A_FRIEND_BONUS);
 
-    return CalculatePct(rep, percent);
+	return CalculatePct(rep, percent);
 }
 
 // Calculates how many reputation points player gains in victim's enemy factions
 void Player::RewardReputation(Unit* victim, float rate)
-{ 
-    if (!victim || victim->GetTypeId() == TYPEID_PLAYER)
-        return;
+{
+	if (!victim || victim->GetTypeId() == TYPEID_PLAYER)
+		return;
 
-    if (victim->ToCreature()->IsReputationGainDisabled())
-        return;
+	if (victim->ToCreature()->IsReputationGainDisabled())
+		return;
 
-    ReputationOnKillEntry const* Rep = sObjectMgr->GetReputationOnKilEntry(victim->ToCreature()->GetCreatureTemplate()->Entry);
-    if (!Rep)
-        return;
+	ReputationOnKillEntry const* Rep = sObjectMgr->GetReputationOnKilEntry(victim->ToCreature()->GetCreatureTemplate()->Entry);
+	if (!Rep)
+		return;
+
+	uint32 repfaction1 = Rep->RepFaction1;
+	uint32 repfaction2 = Rep->RepFaction2;
+
+	if (!IsPlayingNative())
+	{
+		if (GetCFSTeam() == ALLIANCE)
+		{
+			if (repfaction1 == 729)
+				repfaction1 = 730;
+			if (repfaction2 = 729)
+				repfaction2 = 730;
+		}
+		else
+		{
+			if (repfaction1 == 730)
+				repfaction1 = 729;
+			if (repfaction2 == 730)
+				repfaction2 = 729;
+		}
+	}
 
     uint32 ChampioningFaction = 0;
 
@@ -7068,23 +7150,23 @@ void Player::RewardReputation(Unit* victim, float rate)
 
     TeamId teamId = GetTeamId(true); // Always check player original reputation when rewarding
 
-    if (Rep->RepFaction1 && (!Rep->TeamDependent || teamId == TEAM_ALLIANCE))
+    if (repfaction1 && (!Rep->TeamDependent || teamId == TEAM_ALLIANCE))
     {
-        int32 donerep1 = CalculateReputationGain(REPUTATION_SOURCE_KILL, victim->getLevel(), Rep->RepValue1, ChampioningFaction ? ChampioningFaction : Rep->RepFaction1);
+        int32 donerep1 = CalculateReputationGain(REPUTATION_SOURCE_KILL, victim->getLevel(), Rep->RepValue1, ChampioningFaction ? ChampioningFaction : repfaction1);
         donerep1 = int32(donerep1 * rate);
 
-        FactionEntry const* factionEntry1 = sFactionStore.LookupEntry(ChampioningFaction ? ChampioningFaction : Rep->RepFaction1);
+        FactionEntry const* factionEntry1 = sFactionStore.LookupEntry(ChampioningFaction ? ChampioningFaction : repfaction1);
         uint32 current_reputation_rank1 = GetReputationMgr().GetRank(factionEntry1);
         if (factionEntry1)
             GetReputationMgr().ModifyReputation(factionEntry1, donerep1, bool(current_reputation_rank1 > Rep->ReputationMaxCap1));
     }
 
-    if (Rep->RepFaction2 && (!Rep->TeamDependent || teamId == TEAM_HORDE))
+    if (repfaction2 && (!Rep->TeamDependent || teamId == TEAM_HORDE))
     {
-        int32 donerep2 = CalculateReputationGain(REPUTATION_SOURCE_KILL, victim->getLevel(), Rep->RepValue2, ChampioningFaction ? ChampioningFaction : Rep->RepFaction2);
+        int32 donerep2 = CalculateReputationGain(REPUTATION_SOURCE_KILL, victim->getLevel(), Rep->RepValue2, ChampioningFaction ? ChampioningFaction : repfaction2);
         donerep2 = int32(donerep2 * rate);
 
-        FactionEntry const* factionEntry2 = sFactionStore.LookupEntry(ChampioningFaction ? ChampioningFaction : Rep->RepFaction2);
+        FactionEntry const* factionEntry2 = sFactionStore.LookupEntry(ChampioningFaction ? ChampioningFaction : repfaction2);
         uint32 current_reputation_rank2 = GetReputationMgr().GetRank(factionEntry2);
         if (factionEntry2)
             GetReputationMgr().ModifyReputation(factionEntry2, donerep2, bool(current_reputation_rank2 > Rep->ReputationMaxCap2));
@@ -7179,7 +7261,7 @@ bool Player::RewardHonor(Unit* uVictim, uint32 groupsize, int32 honor, bool awar
         if (!uVictim || uVictim == this || uVictim->GetTypeId() != TYPEID_PLAYER)
             return false;
 
-        if (GetBgTeamId() == uVictim->ToPlayer()->GetBgTeamId())
+        if (GetBgTeamId() == uVictim->ToPlayer()->GetTeamId())
             return false;
 
         return true;
@@ -12186,13 +12268,13 @@ InventoryResult Player::CanUseItem(ItemTemplate const* proto) const
 
     if (proto)
     {
-        if ((proto->Flags2 & ITEM_FLAGS_EXTRA_HORDE_ONLY) && GetTeamId(true) != TEAM_HORDE)
+        if ((proto->Flags2 & ITEM_FLAGS_EXTRA_HORDE_ONLY) && GetCFSTeam() != TEAM_HORDE)
             return EQUIP_ERR_YOU_CAN_NEVER_USE_THAT_ITEM;
 
-        if ((proto->Flags2 & ITEM_FLAGS_EXTRA_ALLIANCE_ONLY) && GetTeamId(true) != TEAM_ALLIANCE)
+        if ((proto->Flags2 & ITEM_FLAGS_EXTRA_ALLIANCE_ONLY) && GetCFSTeam() != TEAM_ALLIANCE)
             return EQUIP_ERR_YOU_CAN_NEVER_USE_THAT_ITEM;
 
-        if ((proto->AllowableClass & getClassMask()) == 0 || (proto->AllowableRace & getRaceMask()) == 0)
+        if ((proto->AllowableClass & getClassMask()) == 0 || (proto->AllowableRace & getCFSRaceMask()) == 0)
             return EQUIP_ERR_YOU_CAN_NEVER_USE_THAT_ITEM;
 
         if (proto->RequiredSkill != 0)
@@ -17413,8 +17495,13 @@ bool Player::LoadFromDB(uint32 guid, SQLQueryHolder *holder)
     bytes0 |= Gender << 16;                                 // gender
     SetUInt32Value(UNIT_FIELD_BYTES_0, bytes0);
 
-    m_realRace = fields[3].GetUInt8(); // set real race
-    m_race = fields[3].GetUInt8(); // set real race
+	SetCFSRace();
+	m_team = TeamIdForRace(getCFSRace());
+	SetFakeRaceAndMorph(); // m_team must be set before this can be used
+	setFactionForRace(getCFSRace());
+
+    //m_realRace = fields[3].GetUInt8(); // set real race
+    //m_race = fields[3].GetUInt8(); // set real race
 
     SetUInt32Value(UNIT_FIELD_LEVEL, fields[6].GetUInt8());
     SetUInt32Value(PLAYER_XP, fields[7].GetUInt32());
@@ -17464,7 +17551,7 @@ bool Player::LoadFromDB(uint32 guid, SQLQueryHolder *holder)
 
     //Need to call it to initialize m_team (m_team can be calculated from race)
     //Other way is to saves m_team into characters table.
-    setFactionForRace(getRace(true));
+    //setFactionForRace(getRace(true));
 
     // pussywizard: create empty instance bind containers if necessary
     sInstanceSaveMgr->PlayerCreateBoundInstancesMaps(guid);
@@ -19161,7 +19248,7 @@ bool Player::CheckInstanceCount(uint32 instanceId) const
 
 bool Player::_LoadHomeBind(PreparedQueryResult result)
 { 
-    PlayerInfo const* info = sObjectMgr->GetPlayerInfo(getRace(true), getClass());
+	PlayerInfo const* info = sObjectMgr->GetPlayerInfo(getCFSRace(), getClass());
     if (!info)
     {
         sLog->outError("Player (Name %s) has incorrect race/class pair. Can't be loaded.", GetName().c_str());
@@ -20446,6 +20533,18 @@ void Player::StopCastingCharm()
     }
 }
 
+void Player::BuildPlayerChat(WorldPacket* data, uint8 msgtype, const std::string& text, uint32 language) const
+{
+	*data << uint8(msgtype);
+	*data << uint32(language);
+	*data << uint64(GetGUID());
+	*data << uint32(0);
+	*data << uint64(GetGUID());
+	*data << uint32(text.length() + 1);
+	*data << text;
+	*data << uint8(GetChatTag());
+}
+
 void Player::Say(const std::string& text, const uint32 language)
 {
     std::string _text(text);
@@ -21471,22 +21570,26 @@ void Player::InitDataForForm(bool reapplyMods)
 
 void Player::InitDisplayIds()
 { 
-    PlayerInfo const* info = sObjectMgr->GetPlayerInfo(getRace(true), getClass());
+    PlayerInfo const* info = sObjectMgr->GetPlayerInfo(getCFSRace(), getClass());
     if (!info)
     {
         sLog->outError("Player %u has incorrect race/class pair. Can't init display ids.", GetGUIDLow());
         return;
     }
 
+	bool isMorphed = GetNativeDisplayId() != GetDisplayId();
+
     uint8 gender = getGender();
     switch (gender)
     {
         case GENDER_FEMALE:
-            SetDisplayId(info->displayId_f);
+			if (!isMorphed)
+				SetDisplayId(info->displayId_f);
             SetNativeDisplayId(info->displayId_f);
             break;
         case GENDER_MALE:
-            SetDisplayId(info->displayId_m);
+			if (!isMorphed)
+				SetDisplayId(info->displayId_m);
             SetNativeDisplayId(info->displayId_m);
             break;
         default:
@@ -22289,7 +22392,7 @@ void Player::ReportedAfkBy(Player* reporter)
 
 WorldLocation Player::GetStartPosition() const
 { 
-    PlayerInfo const* info = sObjectMgr->GetPlayerInfo(getRace(true), getClass());
+    PlayerInfo const* info = sObjectMgr->GetPlayerInfo(getCFSRace(), getClass());
     uint32 mapId = info->mapId;
     if (getClass() == CLASS_DEATH_KNIGHT && HasSpell(50977))
         return WorldLocation(0, 2352.0f, -5709.0f, 154.5f, 0.0f);
@@ -25813,7 +25916,7 @@ void Player::_SaveCharacter(bool create, SQLTransaction& trans)
         stmt->setUInt32(index++, GetGUIDLow());
         stmt->setUInt32(index++, GetSession()->GetAccountId());
         stmt->setString(index++, GetName());
-        stmt->setUInt8(index++, getRace(true));
+        stmt->setUInt8(index++, getCFSRace());
         stmt->setUInt8(index++, getClass());
         stmt->setUInt8(index++, getGender());
         stmt->setUInt8(index++, getLevel());
@@ -25918,7 +26021,7 @@ void Player::_SaveCharacter(bool create, SQLTransaction& trans)
         // Update query
         stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHARACTER);
         stmt->setString(index++, GetName());
-        stmt->setUInt8(index++, getRace(true));
+        stmt->setUInt8(index++, getCFSRace());
         stmt->setUInt8(index++, getClass());
         stmt->setUInt8(index++, getGender());
         stmt->setUInt8(index++, getLevel());

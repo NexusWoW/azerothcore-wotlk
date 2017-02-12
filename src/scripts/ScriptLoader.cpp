@@ -573,6 +573,9 @@ void AddSC_chat_log();
 // custom rates
 void AddSC_Custom_Rates();
 
+// crossfaction bgs
+void AddSC_CrossFactionGroups();
+
 #endif
 
 void AddSpellScripts()
@@ -1172,5 +1175,6 @@ void AddCustomScripts()
 {
 #ifdef SCRIPTS
 	AddSC_Custom_Rates();
+	AddSC_CrossFactionGroups();
 #endif
 }

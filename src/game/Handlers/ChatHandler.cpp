@@ -306,7 +306,6 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recvData)
         }
     }
 
-
     switch (type)
     {
         case CHAT_MSG_SAY:
@@ -322,6 +321,10 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recvData)
                 SendNotification(GetTrinityString(LANG_SAY_REQ), sWorld->getIntConfig(CONFIG_CHAT_SAY_LEVEL_REQ));
                 return;
             }
+
+			if (!GetPlayer()->IsGameMaster())
+				if (GetPlayer()->SendBattleGroundChat((ChatMsg)type, msg))
+					return;
 
             if (type == CHAT_MSG_SAY)
                 sender->Say(msg, lang);

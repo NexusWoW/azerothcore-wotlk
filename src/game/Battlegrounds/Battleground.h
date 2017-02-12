@@ -480,7 +480,7 @@ class Battleground
         void CastSpellOnTeam(uint32 spellId, TeamId teamId);
         void RemoveAuraOnTeam(uint32 spellId, TeamId teamId);
         void RewardHonorToTeam(uint32 honor, TeamId teamId);
-        void RewardReputationToTeam(uint32 factionId, uint32 reputation, TeamId teamId);
+        void RewardReputationToTeam(uint32 a_faction_id, uint32 h_faction_id, uint32 reputation, TeamId teamId);
         uint32 GetRealRepFactionForPlayer(uint32 factionId, Player* player);
 
         void UpdateWorldState(uint32 Field, uint32 Value);

@@ -127,7 +127,7 @@ void WorldSession::HandleMoveWorldportAckOpcode()
         // but landed on another map, cleanup data
         if (!mEntry->IsBattlegroundOrArena())
             _player->SetBattlegroundId(0, BATTLEGROUND_TYPE_NONE, PLAYER_MAX_BATTLEGROUND_QUEUES, false, false, TEAM_NEUTRAL);
-        // everything ok
+		// everything ok
         else if (Battleground* bg = _player->GetBattleground())
         {
             if (_player->IsInvitedForBattlegroundInstance()) // GMs are not invited, so they are not added to participants
