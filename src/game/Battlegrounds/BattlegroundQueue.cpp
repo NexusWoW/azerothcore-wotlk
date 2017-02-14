@@ -734,10 +734,9 @@ void BattlegroundQueue::BattlegroundQueueUpdate(BattlegroundBracketId bracket_id
         {
             Battleground* bg = *itr;
 
-			FillXPlayersToBG(bracket_id, bg, false);
-
-            // call a function that fills whatever we can from normal queues
-            FillPlayersToBG(bg->GetFreeSlotsForTeam(TEAM_ALLIANCE), bg->GetFreeSlotsForTeam(TEAM_HORDE), bracket_id);
+			// Attempt to fill crossfaction then look onwards.
+			if (!FillXPlayersToBG(bracket_id, bg, bg->GetStatus() == STATUS_NONE ? true : false))
+				FillPlayersToBG(bg->GetFreeSlotsForTeam(TEAM_ALLIANCE), bg->GetFreeSlotsForTeam(TEAM_HORDE), bracket_id);
 
             // invite players
             for (uint32 i = 0; i < BG_TEAMS_COUNT; i++)
@@ -769,7 +768,7 @@ void BattlegroundQueue::BattlegroundQueueUpdate(BattlegroundBracketId bracket_id
             if (!bg)
                 return;
 
-			FillXPlayersToBG(bracket_id, bg, false);
+			FillXPlayersToBG(bracket_id, bg, bg->GetStatus() == STATUS_NONE ? true : false);
 
             // invite players
             for (uint32 i = 0; i < BG_TEAMS_COUNT; i++)
@@ -781,7 +780,7 @@ void BattlegroundQueue::BattlegroundQueueUpdate(BattlegroundBracketId bracket_id
             // now fill the premade bg if possible (only one team for each side has been invited yet)
             if (bg->HasFreeSlots())
             {
-				FillXPlayersToBG(bracket_id, bg, false);
+				FillXPlayersToBG(bracket_id, bg, bg->GetStatus() == STATUS_NONE ? true : false);
 
                 // call a function that fills whatever we can from normal queues
                 FillPlayersToBG(bg->GetFreeSlotsForTeam(TEAM_ALLIANCE), bg->GetFreeSlotsForTeam(TEAM_HORDE), bracket_id);

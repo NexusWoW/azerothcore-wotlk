@@ -236,13 +236,15 @@ bool BattlegroundQueue::FillXPlayersToBG(BattlegroundBracketId bracket_id, Battl
 		if (!(*itr)->IsInvitedToBGInstanceGUID)
 			queuedPeople += (*itr)->Players.size();
 
-	if (sWorld->getBoolConfig(CROSSFACTION_SYSTEM_BATTLEGROUNDS) && (sBattlegroundMgr->isTesting() || queuedPeople >= bg->GetMinPlayersPerTeam() * 2 || !start))
+	if (sWorld->getBoolConfig(CROSSFACTION_SYSTEM_BATTLEGROUNDS))
 	{
 		int32 aliFree = start ? bg->GetMaxPlayersPerTeam() : bg->GetFreeSlotsForTeam(TEAM_ALLIANCE);
 		int32 hordeFree = start ? bg->GetMaxPlayersPerTeam() : bg->GetFreeSlotsForTeam(TEAM_HORDE);
-		// Empty selection pools. They will be refilled from queued groups.
+
+		// clear selection pools
 		m_SelectionPools[TEAM_ALLIANCE].Init();
 		m_SelectionPools[TEAM_HORDE].Init();
+
 		int32 valiFree = aliFree;
 		int32 vhordeFree = hordeFree;
 		int32 diff = 0;
