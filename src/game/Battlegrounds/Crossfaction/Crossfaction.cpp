@@ -236,7 +236,8 @@ bool BattlegroundQueue::FillXPlayersToBG(BattlegroundBracketId bracket_id, Battl
 		if (!(*itr)->IsInvitedToBGInstanceGUID)
 			queuedPeople += (*itr)->Players.size();
 
-	if (sWorld->getBoolConfig(CROSSFACTION_SYSTEM_BATTLEGROUNDS))
+	// Check if the system is enabled and we have an even number of people queued.
+	if (sWorld->getBoolConfig(CROSSFACTION_SYSTEM_BATTLEGROUNDS) && !(queuedPeople % 2))
 	{
 		int32 aliFree = start ? bg->GetMaxPlayersPerTeam() : bg->GetFreeSlotsForTeam(TEAM_ALLIANCE);
 		int32 hordeFree = start ? bg->GetMaxPlayersPerTeam() : bg->GetFreeSlotsForTeam(TEAM_HORDE);
