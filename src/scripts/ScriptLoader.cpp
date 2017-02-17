@@ -7,6 +7,11 @@
 #include "ScriptLoader.h"
 #include "ScriptMgr.h"
 
+//custom
+void custombosses ()
+{AddSC_Custombosses();
+}
+
 // spells
 void AddSC_deathknight_spell_scripts();
 void AddSC_druid_spell_scripts();

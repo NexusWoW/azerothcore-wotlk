@@ -10,6 +10,7 @@
 
 set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
+  ${AC_SCRIPTS_DIR}/Custom/customboss.cpp
   ${AC_SCRIPTS_DIR}/Custom/custom_rates.cpp
   ${AC_SCRIPTS_DIR}/Custom/Crossfaction/Crossfaction.cpp
   ${AC_SCRIPTS_DIR}/Custom/Crossfaction/Crossfaction.h
