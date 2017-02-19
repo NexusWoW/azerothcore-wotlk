@@ -444,6 +444,9 @@ void World::LoadConfigSettings(bool reload)
     ///- Send server info on login?
     m_int_configs[CONFIG_ENABLE_SINFO_LOGIN] = sConfigMgr->GetIntDefault("Server.LoginInfo", 0);
 
+	// Default guild.
+	m_int_configs[CONFIG_PLAYER_DEFAULT_GUILD] = sConfigMgr->GetIntDefault("Player.DefaultGuildID", 1);
+
 	// Custom exp / loot rates.
 	m_bool_configs[CONFIG_CUSTOM_XP_RATE] = sConfigMgr->GetBoolDefault("CustomRates.Exp.Enabled", false);
 	m_bool_configs[CONFIG_CUSTOM_LOOT_RATE] = sConfigMgr->GetBoolDefault("CustomRates.Loot.Enabled", false);
@@ -482,6 +485,16 @@ void World::LoadConfigSettings(bool reload)
 	}
 	else
 		m_int_configs[CONFIG_CUSTOM_XP_RATE_MAX] = maxXpRate;
+
+	int defaultXpRate = sConfigMgr->GetIntDefault("CustomRates.Exp.DefaultRate", 1);
+
+	if (defaultXpRate < 1 || defaultXpRate > maxXpRate)
+	{
+		sLog->outError("CustomRates.Exp.MaxRate has an invalid value `%i`, defaulting to 1 ...", defaultXpRate);
+		m_int_configs[CONFIG_CUSTOM_XP_RATE_DEFAULT] = 1;
+	}
+	else
+		m_int_configs[CONFIG_CUSTOM_XP_RATE_DEFAULT] = defaultXpRate;
 
 	maxXpRate = sConfigMgr->GetIntDefault("CustomRates.Loot.MaxRate", 1);
 

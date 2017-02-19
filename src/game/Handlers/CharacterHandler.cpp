@@ -38,6 +38,8 @@
 #include "WorldPacket.h"
 #include "WorldSession.h"
 #include "Transport.h"
+#include "Config.h"
+#include "ChannelMgr.h"
 
 class LoginQueryHolder : public SQLQueryHolder
 {
@@ -1164,6 +1166,30 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder* holder)
 	}
 
     sScriptMgr->OnPlayerLogin(pCurrChar);
+
+	// Custom channel and guild.
+	std::string defaultChannel = sConfigMgr->GetStringDefault("Player.DefaultChannel", "");
+
+	if (defaultChannel != "")
+	{
+		/*
+			TODO: Implement proper channel management / security for the default channel.
+		*/;
+	}
+
+	// Join guild.
+	uint32 defaultGuild = sWorld->getIntConfig(CONFIG_PLAYER_DEFAULT_GUILD);
+
+	// If this property is set and the player is not in a guild.
+	if (defaultGuild > 0 && !pCurrChar->GetGuildId())
+	{
+		// Attempt to find the default guild.
+		Guild * g = sGuildMgr->GetGuildById(defaultGuild);
+		
+		// Assign lowest rank as default.
+		if (g)
+			g->AddMember(pCurrChar->GetGUID(), GUILD_RANK_NONE);
+	}
 
 	if (pCurrChar->GetTeam() != pCurrChar->GetCFSTeam())
 		pCurrChar->FitPlayerInTeam(pCurrChar->GetBattleground() && !pCurrChar->GetBattleground()->isArena() ? true : false, pCurrChar->GetBattleground());

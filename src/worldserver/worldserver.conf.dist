@@ -3020,6 +3020,20 @@ PlayerDump.DisallowPaths = 1
 PlayerDump.DisallowOverwrite = 1
 
 #
+#     Player.DefaultChannel
+#        Description: Join a channel on login.
+#        Default:     ""
+
+Player.DefaultChannel = ""
+
+#
+#     Player.DefaultGuildID
+#        Description: Join a guild with the specified below GUID on login.
+#        Default:     0
+
+Player.DefaultGuildID = 0
+
+#
 ###################################################################################################
 
 ###################################################################################################
@@ -3056,13 +3070,15 @@ CustomRates.Exp.Security = 0
 CustomRates.Loot.Security = 0
 
 #    CustomRates.Exp.MaxRate
+#    CustomRates.Exp.DefaultRate
 #    CustomRates.Loot.MaxRate
-#        Description: Maximum individual XP / loot rate
+#        Description: Specific configuration for individual XP / loot rates.
 #        Values     : n (integer, may set xp / loot rate in range [1,n]
 #        Default    : 10
 #
 
 CustomRates.Exp.MaxRate = 10
+CustomRates.Exp.DefaultRate = 10
 CustomRates.MaximumLootRate = 10
 
 #    CustomRates.ShowXpRateOnLogin

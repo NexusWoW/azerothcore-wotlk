@@ -99,6 +99,14 @@ public:
 						ChatHandler(player->GetSession()).SendSysMessage("|CFF7BBEF7[Custom Rates]|r: Your XP rate was set to 0. You won't gain any XP anymore.");
 				}
 			}
+			else
+			{
+				// If they do not have a rate specified, let's default it to the default rate.
+				uint32 defaultRate = sWorld->getIntConfig(CONFIG_CUSTOM_XP_RATE_DEFAULT);
+
+				// Set it.
+				player->SetCustomXPRate(defaultRate);
+			}
 		}
 
 		// Only present loot rates if they are enabled.
