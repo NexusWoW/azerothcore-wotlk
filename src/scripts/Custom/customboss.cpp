@@ -220,7 +220,7 @@ public:
     {
         npc_volcanoAI(Creature* creature) : ScriptedAI(creature)
         {
-            me->AddAura(SPELL_VOLCANIC_ERUPTION_TRIGGER, me);
+            me->CastSpell(me, SPELL_VOLCANIC_ERUPTION_TRIGGER, false);
         }
 
     };
