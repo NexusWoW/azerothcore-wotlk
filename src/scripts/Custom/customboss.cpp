@@ -56,7 +56,7 @@ public:
         void phase1()
         {
             phase = 1;
-            PHASE2_TIMER = 120000;
+            PHASE2_TIMER = 30000;
             me->SetReactState(REACT_AGGRESSIVE);
             me->RemoveAura(SPELL_BANISH);
             me->SetControlled(false, UNIT_STATE_ROOT);
@@ -72,7 +72,7 @@ public:
             SHADOW_DEMON_TIMER = 10000;
             SUMMON_VOLCANO = 30000;
             SHADOWBOLT_TIMER = 10000;
-            PHASE1_TIMER = 120000;
+            PHASE1_TIMER = 30000;
             me->AttackStop();
             me->SetControlled(true, UNIT_STATE_ROOT);
             SHADOWBOLT_VOLLY = 5000;
@@ -83,7 +83,7 @@ public:
             phase = 1;
             SHADOWBOLT_TIMER = 3000;
             SUMMMON_SOULS = 45000;
-            PHASE2_TIMER = 120000;
+            PHASE2_TIMER = 30000;
             me->AddAura(SPELL_CHANNELING, me);
             SUMMON_FIRE_VOLCANO = 10000;
         }
