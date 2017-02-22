@@ -1180,8 +1180,8 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder* holder)
 	// Join guild.
 	uint32 defaultGuild = sWorld->getIntConfig(CONFIG_PLAYER_DEFAULT_GUILD);
 
-	// If this property is set and the player is not in a guild.
-	if (defaultGuild > 0 && !pCurrChar->GetGuildId())
+	// If this property is set and this is the player's first time logging in, if they are not in a guild, put them in the default one.
+	if (defaultGuild > 0 && !pCurrChar->GetGuildId() && pCurrChar->HasAtLoginFlag(AT_LOGIN_FIRST))
 	{
 		// Attempt to find the default guild.
 		Guild * g = sGuildMgr->GetGuildById(defaultGuild);
