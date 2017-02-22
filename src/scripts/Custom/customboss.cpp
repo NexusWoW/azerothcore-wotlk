@@ -227,7 +227,7 @@ public:
 };
 
 
-void AddSC_Custombosses()
+void AddSC_CustomBosses()
 {
     new boss_customboss1();
     new npc_volcano();

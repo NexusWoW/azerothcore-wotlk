@@ -7,11 +7,6 @@
 #include "ScriptLoader.h"
 #include "ScriptMgr.h"
 
-//custom
-void custombosses ()
-{AddSC_Custombosses();
-}
-
 // spells
 void AddSC_deathknight_spell_scripts();
 void AddSC_druid_spell_scripts();
@@ -580,6 +575,9 @@ void AddSC_Custom_Rates();
 
 // crossfaction bgs
 void AddSC_CrossFactionGroups();
+
+// custom content
+void AddSC_CustomBosses();
 
 #endif
 
@@ -1181,5 +1179,6 @@ void AddCustomScripts()
 #ifdef SCRIPTS
 	AddSC_Custom_Rates();
 	AddSC_CrossFactionGroups();
+	AddSC_CustomBosses();
 #endif
 }
