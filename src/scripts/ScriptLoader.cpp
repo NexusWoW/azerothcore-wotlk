@@ -579,6 +579,9 @@ void AddSC_CrossFactionGroups();
 // custom content
 void AddSC_CustomBosses();
 
+// nexus hooks
+void AddSC_Nexus_Hooks();
+
 #endif
 
 void AddSpellScripts()
@@ -1180,5 +1183,6 @@ void AddCustomScripts()
 	AddSC_Custom_Rates();
 	AddSC_CrossFactionGroups();
 	AddSC_CustomBosses();
+	AddSC_Nexus_Hooks();
 #endif
 }
