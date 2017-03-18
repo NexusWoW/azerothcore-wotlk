@@ -789,69 +789,78 @@ public:
 
 class boss_flame_leviathan_defense_turret : public CreatureScript
 {
-    public:
-        boss_flame_leviathan_defense_turret() : CreatureScript("boss_flame_leviathan_defense_turret") { }
+public:
+	boss_flame_leviathan_defense_turret() : CreatureScript("boss_flame_leviathan_defense_turret") { }
 
-        struct boss_flame_leviathan_defense_turretAI : public TurretAI
-        {
-            boss_flame_leviathan_defense_turretAI(Creature* creature) : TurretAI(creature)
-            {
-                _setHealth = false;
-            }
+	struct boss_flame_leviathan_defense_turretAI : public TurretAI
+	{
+		boss_flame_leviathan_defense_turretAI(Creature* creature) : TurretAI(creature)
+		{
+			_setHealth = false;
+			pInstance = me->GetInstanceScript();
+		}
 
-InstanceScript* m_pInstance;
-            bool _setHealth;
-            void DamageTaken(Unit* who, uint32 &damage, DamageEffectType, SpellSchoolMask)
-            {
-                if (!who || !CanAIAttack(who))
-                {
-                    _setHealth = true;
-                    damage = 0;
-                }
-            }
+		void DamageTaken(Unit* who, uint32 &damage, DamageEffectType, SpellSchoolMask)
+		{
+			if (!who || !CanAIAttack(who))
+			{
+				_setHealth = true;
+				damage = 0;
+			}
+		}
 
-            void JustDied(Unit* who)
-            {
-                if (Player* killer = who->ToPlayer())
-                    killer->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS, 1, 0, me);
+		void JustDied(Unit* who)
+		{
+			if (Player* killer = who->ToPlayer())
+				killer->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS, 1, 0, me);
 
-                if (Vehicle* vehicle = me->GetVehicle())
-                    if (Unit* device = vehicle->GetPassenger(SEAT_DEVICE))
-                        device->SetUInt32Value(UNIT_FIELD_FLAGS, 0); // unselectable
-                        
-                        
-                        uint64 FlameGUID = m_pInstance->GetData(TYPE_LEVIATHAN);
-                        if (FlameGUID)
-                        {
-                        Unit* Flame = ObjectAccessor::GetUnit(*me, FlameGUID);
-                        if (Flame && Flame->IsAlive())
-                        DoCast(Flame, SPELL_SYSTEMS_SHUTDOWN, true);
-                        }         
-            }
+			if (Vehicle* vehicle = me->GetVehicle())
+			{
+				if (Unit* device = vehicle->GetPassenger(SEAT_DEVICE))
+				{
+					device->SetUInt32Value(UNIT_FIELD_FLAGS, 0); // unselectable
 
-            bool CanAIAttack(Unit const* who) const
-            {
-                if (who->GetTypeId() != TYPEID_PLAYER || !who->GetVehicle() || who->GetVehicleBase()->GetEntry() != NPC_SEAT)
-                    return false;
-                return true;
-            }
+					FlameGUID = pInstance->GetData(TYPE_LEVIATHAN);
 
-            void UpdateAI(uint32 diff)
-            {
-                if (_setHealth)
-                {
-                    me->SetHealth(std::min(me->GetHealth()+1, me->GetMaxHealth()));
-                    _setHealth = false;
-                }
+					if (FlameGUID)
+					{
+						Unit* Flame = ObjectAccessor::GetUnit(*me, FlameGUID);
 
-                TurretAI::UpdateAI(diff);
-            }
-        };
+						if (Flame && Flame->IsAlive())
+							DoCast(Flame, SPELL_SYSTEMS_SHUTDOWN, true);
+					}
+				}
+			}
+		}
 
-        CreatureAI* GetAI(Creature* creature) const
-        {
-            return new boss_flame_leviathan_defense_turretAI(creature);
-        }
+		bool CanAIAttack(Unit const* who) const
+		{
+			if (who->GetTypeId() != TYPEID_PLAYER || !who->GetVehicle() || who->GetVehicleBase()->GetEntry() != NPC_SEAT)
+				return false;
+			return true;
+		}
+
+		void UpdateAI(uint32 diff)
+		{
+			if (_setHealth)
+			{
+				me->SetHealth(std::min(me->GetHealth() + 1, me->GetMaxHealth()));
+				_setHealth = false;
+			}
+
+			TurretAI::UpdateAI(diff);
+		}
+
+	private:
+		bool _setHealth;
+		uint64 FlameGUID;
+		InstanceScript* pInstance;
+	};
+
+	CreatureAI* GetAI(Creature* creature) const
+	{
+		return new boss_flame_leviathan_defense_turretAI(creature);
+	}
 };
 
 class boss_flame_leviathan_overload_device : public CreatureScript
